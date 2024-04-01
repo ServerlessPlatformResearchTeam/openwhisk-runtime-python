@@ -23,7 +23,6 @@ jobs:
       # Conditionally publish runtime images to DockerHub
       # Important: naming convention for release tags is runtime@version
       - name: Docker Login
-        if: ${{ env.PUSH_NIGHTLY  == 'true' || env.PUSH_RELEASE == 'true' }}
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USER_OPENWHISK }}
