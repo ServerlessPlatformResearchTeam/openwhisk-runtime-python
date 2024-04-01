@@ -16,34 +16,15 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: runtime
-          
+
       - name: Scan Code
         uses: apache/openwhisk-utilities/scancode@master
-
-      # Install core OpenWhisk artifacts needed to build/test anything else
-      - name: Checkout OpenWhisk core repo
-        uses: actions/checkout@v4
-        with:
-          repository: apache/openwhisk
-          path: core
 
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '11'
-  
-      - name: Compile and Install Core OpenWhisk
-        working-directory: core
-        run: |
-          ./gradlew :tests:compileTestScala
-          ./gradlew install
-
-      # Build this repository
-      - name: Build Runtime
-        working-directory: runtime
-        run: |
-          ./gradlew distDocker
 
       # Conditionally publish runtime images to DockerHub
       # Important: naming convention for release tags is runtime@version
@@ -52,19 +33,9 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USER_OPENWHISK }}
           password: ${{ secrets.DOCKERHUB_TOKEN_OPENWHISK }}
-      
-      - name: Push Images
+  
+      # Build this repository
+      - name: Build Runtime
         working-directory: runtime
         run: |
-          RUNTIME_VERSION=${GITHUB_REF_NAME%@*}
-          IMAGE_TAG=${GITHUB_REF_NAME##*@}
-          if [ ${RUNTIME_VERSION} == "39" ]; then
-            RUNTIME="python39Action"
-          elif [ ${RUNTIME_VERSION} == "310" ]; then
-            RUNTIME="python310Action"
-          elif [ ${RUNTIME_VERSION} == "311" ]; then
-            RUNTIME="python311Action"
-          elif [ ${RUNTIME_VERSION} == "312" ]; then
-            RUNTIME="python312Action"
-          fi
-          ./gradlew :core:$RUNTIME:distDocker -PdockerRegistry=docker.io -PdockerImagePrefix=openwhisk -PdockerImageTag=$IMAGE_TAG
+          ./gradlew distDocker -PdockerImagePrefix=developerryou -PdockerRegistry=docker.io
